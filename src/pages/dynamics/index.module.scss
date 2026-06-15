@@ -359,3 +359,241 @@
   color: $color-text-primary;
   font-weight: $font-weight-medium;
 }
+
+/* 浮动添加按钮 */
+.floatBtn {
+  position: fixed;
+  right: 40rpx;
+  bottom: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(255, 138, 61, 0.4);
+  z-index: 100;
+}
+
+/* 模态框遮罩 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* 底部弹出内容 */
+.modalContent {
+  width: 100%;
+  max-height: 85vh;
+  background-color: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg $spacing-lg $spacing-md;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-round;
+  background-color: $color-bg-hover;
+}
+
+/* 模态框滚动区域 */
+.modalBody {
+  flex: 1;
+  padding: $spacing-lg;
+  overflow-y: auto;
+}
+
+/* 表单组 */
+.formGroup {
+  margin-bottom: $spacing-lg;
+}
+
+.formLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.formInput {
+  width: 100%;
+  height: $button-height-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  margin-bottom: $spacing-sm;
+  box-sizing: border-box;
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  box-sizing: border-box;
+}
+
+.formInputRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.formInputSmall {
+  flex: 1;
+  height: $button-height-md;
+  padding: 0 $spacing-sm;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  box-sizing: border-box;
+}
+
+.formToggleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.formToggleLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.formToggle {
+  padding: 8rpx 24rpx;
+  border-radius: $radius-button;
+  background-color: $color-bg-hover;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formToggleActive {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-color: $color-primary;
+}
+
+/* 心情/健康选择器 */
+.moodPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.moodOption {
+  padding: 12rpx 24rpx;
+  border-radius: $radius-button;
+  background-color: $color-bg-hover;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+}
+
+.moodOptionSelected {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-color: $color-primary;
+}
+
+/* 照片行 */
+.photoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.formPhotoItem {
+  position: relative;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.formPhotoImage {
+  width: 100%;
+  height: 100%;
+}
+
+.formPhotoRemove {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formPhotoAdd {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-sm;
+  border: 2rpx dashed $color-text-disabled;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-bg-hover;
+}
+
+/* 模态框底部 */
+.modalFooter {
+  padding: $spacing-md $spacing-lg;
+  border-top: 1rpx solid $color-border;
+  background-color: $color-bg-card;
+}
+
+.saveBtn {
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(255, 138, 61, 0.3);
+}

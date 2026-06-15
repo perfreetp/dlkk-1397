@@ -3,42 +3,43 @@ import {
   View,
   Text,
   ScrollView,
-  Button
+  Button,
+  Picker
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { feeItemList, extraServiceList, bookingList } from '@/data/booking';
-import type { FeeItem, ExtraService } from '@/types';
+import useAppStore from '@/store';
+import { extraServiceList } from '@/data/booking';
 
 const FeePage: React.FC = () => {
-  const [selectedServices, setSelectedServices] = useState<string[]>(['es1']);
-  const currentBooking = bookingList.find(b => b.status === 'in_progress');
+  const {
+    feeItems,
+    selectedExtraServices,
+    toggleExtraService,
+    bookings,
+    addFeeItem,
+    updateBooking
+  } = useAppStore();
 
-  const toggleService = (serviceId: string) => {
-    if (selectedServices.includes(serviceId)) {
-      setSelectedServices(selectedServices.filter(id => id !== serviceId));
-    } else {
-      setSelectedServices([...selectedServices, serviceId]);
-    }
-  };
+  const currentBooking = bookings.find(b => b.status === 'in_progress');
+  const [extendDate, setExtendDate] = useState(currentBooking?.checkOutDate || '');
 
-  const extraTotal = useMemo(() => {
-    return extraServiceList
-      .filter(s => selectedServices.includes(s.id))
-      .reduce((sum, s) => sum + s.price, 0);
-  }, [selectedServices]);
-
-  const roomTotal = useMemo(() => {
-    return feeItemList
-      .filter(f => f.type === 'room')
-      .reduce((sum, f) => sum + f.price * f.quantity, 0);
-  }, []);
+  const includedServiceNames = useMemo(() => {
+    return feeItems
+      .filter(f => f.type === 'service')
+      .map(f => f.name);
+  }, [feeItems]);
 
   const totalPrice = useMemo(() => {
-    const baseTotal = feeItemList.reduce((sum, f) => sum + f.price * f.quantity, 0);
-    return baseTotal + extraTotal;
-  }, [extraTotal]);
+    return feeItems.reduce((sum, f) => sum + f.price * f.quantity, 0);
+  }, [feeItems]);
+
+  const extraTotal = useMemo(() => {
+    return feeItems
+      .filter(f => f.type === 'extra')
+      .reduce((sum, f) => sum + f.price * f.quantity, 0);
+  }, [feeItems]);
 
   const handlePay = () => {
     console.log('[Fee] 支付费用', totalPrice);
@@ -48,17 +49,52 @@ const FeePage: React.FC = () => {
     });
   };
 
-  const handleExtend = () => {
-    console.log('[Fee] 申请延期');
-    Taro.showActionSheet({
-      itemList: ['延长1天', '延长2天', '延长3天', '自定义'],
-      success: (res) => {
-        Taro.showToast({
-          title: '延期申请已提交',
-          icon: 'success'
-        });
-      }
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '请选择';
+    const date = new Date(dateStr);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    return `${month}月${day}日 ${weekDays[date.getDay()]}`;
+  };
+
+  const handleExtendDateChange = (e) => {
+    const newDate = e.detail.value;
+    setExtendDate(newDate);
+  };
+
+  const handleSubmitExtend = () => {
+    if (!currentBooking || !extendDate) {
+      Taro.showToast({ title: '请选择延期日期', icon: 'none' });
+      return;
+    }
+
+    const current = new Date(currentBooking.checkOutDate);
+    const extended = new Date(extendDate);
+
+    if (extended <= current) {
+      Taro.showToast({ title: '新日期需晚于当前离店日期', icon: 'none' });
+      return;
+    }
+
+    const extraDays = Math.ceil(
+      (extended.getTime() - current.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const roomFeeItem = feeItems.find(f => f.type === 'room');
+    const roomPrice = roomFeeItem ? roomFeeItem.price : 0;
+
+    addFeeItem({
+      id: `fee_extend_${Date.now()}`,
+      name: `延期住宿 (${extraDays}晚)`,
+      price: roomPrice,
+      quantity: extraDays,
+      type: 'room'
     });
+
+    updateBooking(currentBooking.id, { checkOutDate: extendDate });
+
+    Taro.showToast({ title: '延期申请已提交', icon: 'success' });
   };
 
   return (
@@ -77,7 +113,7 @@ const FeePage: React.FC = () => {
         <View className={styles.card}>
           <Text className={styles.cardTitle}>费用明细</Text>
           <View className={styles.feeList}>
-            {feeItemList.map(item => (
+            {feeItems.map(item => (
               <View key={item.id} className={styles.feeItem}>
                 <View className={styles.feeInfo}>
                   <Text className={styles.feeName}>{item.name}</Text>
@@ -95,23 +131,38 @@ const FeePage: React.FC = () => {
         <View className={styles.card}>
           <Text className={styles.cardTitle}>追加服务</Text>
           <View className={styles.serviceGrid}>
-            {extraServiceList.map(service => (
-              <View
-                key={service.id}
-                className={classnames(
-                  styles.serviceCard,
-                  selectedServices.includes(service.id) && styles.selected
-                )}
-                onClick={() => toggleService(service.id)}
-              >
-                <Text className={styles.serviceIcon}>{service.icon}</Text>
-                <Text className={styles.serviceName}>{service.name}</Text>
-                <Text className={styles.serviceDesc}>{service.description}</Text>
-                <Text className={styles.servicePrice}>¥{service.price}</Text>
-              </View>
-            ))}
+            {extraServiceList.map(service => {
+              const isIncluded = includedServiceNames.includes(service.name);
+              const isSelected = selectedExtraServices.includes(service.id);
+
+              return (
+                <View
+                  key={service.id}
+                  className={classnames(
+                    styles.serviceCard,
+                    isSelected && styles.selected,
+                    isIncluded && styles.serviceCardIncluded
+                  )}
+                  onClick={() => {
+                    if (!isIncluded) {
+                      toggleExtraService(service.id);
+                    }
+                  }}
+                >
+                  <Text className={styles.serviceIcon}>{service.icon}</Text>
+                  <Text className={styles.serviceName}>{service.name}</Text>
+                  <Text className={styles.serviceDesc}>{service.description}</Text>
+                  <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text className={styles.servicePrice}>¥{service.price}</Text>
+                    {isIncluded && (
+                      <Text className={styles.includedBadge}>已包含</Text>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </View>
-          {selectedServices.length > 0 && (
+          {extraTotal > 0 && (
             <View style={{ marginTop: '24rpx', textAlign: 'right' }}>
               <Text style={{ fontSize: '24rpx', color: '#6B7280' }}>
                 追加服务合计：
@@ -130,11 +181,19 @@ const FeePage: React.FC = () => {
             <View className={styles.extendInfo}>
               <Text className={styles.extendTitle}>需要延长寄养时间？</Text>
               <Text className={styles.extendDesc}>
-                预计离店：{currentBooking?.checkOutDate}
+                当前离店：{currentBooking?.checkOutDate}
               </Text>
+              <View className={styles.extendDatePicker}>
+                <Text style={{ fontSize: '24rpx', color: '#6B7280' }}>延期至：</Text>
+                <Picker mode="date" value={extendDate} start={currentBooking?.checkOutDate} onChange={handleExtendDateChange}>
+                  <View className={styles.extendDateValue}>
+                    <Text>{extendDate ? formatDate(extendDate) : '请选择新离店日期'}</Text>
+                  </View>
+                </Picker>
+              </View>
             </View>
-            <Button className={styles.extendButton} onClick={handleExtend}>
-              申请延期
+            <Button className={styles.extendButton} onClick={handleSubmitExtend}>
+              确认延期
             </Button>
           </View>
         </View>

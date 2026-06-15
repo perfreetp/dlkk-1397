@@ -126,6 +126,20 @@
   }
 }
 
+.serviceCardIncluded {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.includedBadge {
+  display: inline-block;
+  font-size: $font-size-xs;
+  color: #ffffff;
+  background-color: #10B981;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-round;
+}
+
 .serviceIcon {
   font-size: 48rpx;
   margin-bottom: $spacing-xs;
@@ -186,6 +200,24 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   border-radius: $radius-button;
+}
+
+.extendDatePicker {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.extendDateValue {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-sm;
+  border: 1rpx solid $color-divider;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
 }
 
 /* 底部操作栏 */

@@ -9,11 +9,13 @@ import {
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { bookingList } from '@/data/booking';
+import useAppStore from '@/store';
 import StatusTag from '@/components/StatusTag';
 
 const BookingDetailPage: React.FC = () => {
-  const booking = bookingList[0];
+  const { bookings, updateBooking } = useAppStore();
+  const id = Taro.getCurrentInstance().router?.params?.id;
+  const booking = bookings.find(b => b.id === id) || bookings[0];
 
   const handleCancel = () => {
     Taro.showModal({
@@ -23,7 +25,7 @@ const BookingDetailPage: React.FC = () => {
       confirmColor: '#EF4444',
       success: (res) => {
         if (res.confirm) {
-          console.log('[BookingDetail] 取消预约');
+          updateBooking(booking.id, { status: 'cancelled' });
           Taro.showToast({
             title: '已取消预约',
             icon: 'success'
@@ -34,11 +36,18 @@ const BookingDetailPage: React.FC = () => {
   };
 
   const handleContact = () => {
-    console.log('[BookingDetail] 联系店家');
     Taro.showToast({
       title: '正在联系店家...',
       icon: 'none'
     });
+  };
+
+  const handleRebook = () => {
+    Taro.switchTab({ url: '/pages/booking/index' });
+  };
+
+  const handleViewDynamics = () => {
+    Taro.switchTab({ url: '/pages/dynamics/index' });
   };
 
   const statusText: Record<string, string> = {
@@ -55,6 +64,41 @@ const BookingDetailPage: React.FC = () => {
     in_progress: '宠物正在店中寄养，您可以查看实时动态',
     completed: '寄养已完成，感谢您的信任！',
     cancelled: '预约已取消'
+  };
+
+  const renderPrimaryAction = () => {
+    if (booking.status === 'pending' || booking.status === 'confirmed') {
+      return (
+        <Button
+          className={classnames(styles.actionButton, styles.primaryButton)}
+          onClick={handleCancel}
+          style={{ background: '#EF4444' }}
+        >
+          取消预约
+        </Button>
+      );
+    }
+    if (booking.status === 'in_progress') {
+      return (
+        <Button
+          className={classnames(styles.actionButton, styles.primaryButton)}
+          onClick={handleViewDynamics}
+        >
+          查看动态
+        </Button>
+      );
+    }
+    if (booking.status === 'completed') {
+      return (
+        <Button
+          className={classnames(styles.actionButton, styles.primaryButton)}
+          onClick={handleRebook}
+        >
+          再次预约
+        </Button>
+      );
+    }
+    return null;
   };
 
   return (
@@ -224,23 +268,7 @@ const BookingDetailPage: React.FC = () => {
         >
           联系店家
         </Button>
-        {(booking.status === 'pending' || booking.status === 'confirmed') && (
-          <Button
-            className={classnames(styles.actionButton, styles.primaryButton)}
-            onClick={handleCancel}
-            style={{ background: '#EF4444' }}
-          >
-            取消预约
-          </Button>
-        )}
-        {booking.status === 'in_progress' && (
-          <Button
-            className={classnames(styles.actionButton, styles.primaryButton)}
-            onClick={() => Taro.switchTab({ url: '/pages/dynamics/index' })}
-          >
-            查看动态
-          </Button>
-        )}
+        {renderPrimaryAction()}
       </View>
     </View>
   );

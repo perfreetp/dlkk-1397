@@ -239,6 +239,11 @@
   font-weight: $font-weight-medium;
 }
 
+.statusTextDone {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+}
+
 .statusTime {
   font-size: $font-size-sm;
   color: $color-text-secondary;
@@ -315,4 +320,132 @@
   font-size: $font-size-sm;
   color: $color-text-primary;
   font-weight: $font-weight-medium;
+}
+
+.returnProgressText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.returnProgress {
+  width: 100%;
+  height: 16rpx;
+  background-color: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+}
+
+.returnProgressBar {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.petStatusInput {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  box-sizing: border-box;
+}
+
+.feeSummary {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.feeSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.feeSummaryTotal {
+  padding-top: $spacing-md;
+  margin-top: $spacing-xs;
+  border-top: 1rpx solid $color-divider;
+  font-weight: $font-weight-bold;
+  color: $color-primary-dark;
+}
+
+.confirmButtons {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+.confirmBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg $spacing-md;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-md;
+  transition: all $transition-base;
+}
+
+.confirmBtnText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+}
+
+.confirmBtnTime {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: $spacing-xs;
+}
+
+.confirmBtnDisabled {
+  background: $color-bg-hover;
+  opacity: 0.7;
+
+  .confirmBtnText {
+    color: $color-text-tertiary;
+  }
+
+  .confirmBtnTime {
+    color: $color-text-tertiary;
+  }
+}
+
+.confirmBtnDone {
+  background: $color-success;
+  opacity: 1;
+
+  .confirmBtnText {
+    color: $color-text-white;
+  }
+
+  .confirmBtnTime {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.completedBar {
+  background-color: $color-success-light;
+
+  .statusText {
+    color: $color-success;
+  }
+}
+
+.confirmTip {
+  display: block;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-warning;
+  margin-top: $spacing-md;
 }

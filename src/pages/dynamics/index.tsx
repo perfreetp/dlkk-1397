@@ -3,24 +3,57 @@ import {
   View,
   Text,
   Image,
-  ScrollView
+  ScrollView,
+  Input,
+  Textarea
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
-import { dailyRecordList } from '@/data/dynamics';
-import { bookingList } from '@/data/booking';
-import type { DailyRecord } from '@/types';
+import useAppStore from '@/store';
+import type { DailyRecord, MealRecord, WalkRecord } from '@/types';
+
+const MOOD_OPTIONS = ['开心活跃', '一般', '有点紧张', '精神不好'];
+const HEALTH_OPTIONS = ['良好', '基本良好', '略有不适', '需关注'];
+
+interface MealForm {
+  food: string;
+  amount: string;
+  finished: boolean;
+}
+
+interface WalkForm {
+  time: string;
+  duration: string;
+  distance: string;
+  notes: string;
+}
 
 const DynamicsPage: React.FC = () => {
-  const activeBookings = bookingList.filter(b => b.status === 'in_progress');
+  const { dailyRecords, bookings, addDailyRecord } = useAppStore();
+  const activeBookings = bookings.filter(b => b.status === 'in_progress');
+
   const [selectedBookingId, setSelectedBookingId] = useState(
     activeBookings[0]?.id || ''
   );
 
+  const [showModal, setShowModal] = useState(false);
+
+  const [mealFood, setMealFood] = useState('');
+  const [mealAmount, setMealAmount] = useState('');
+  const [mealFinished, setMealFinished] = useState(true);
+  const [waterStatus, setWaterStatus] = useState('');
+  const [poopStatus, setPoopStatus] = useState('');
+  const [peeStatus, setPeeStatus] = useState('');
+  const [walkForm, setWalkForm] = useState<WalkForm>({ time: '', duration: '', distance: '', notes: '' });
+  const [selectedMood, setSelectedMood] = useState('');
+  const [selectedHealth, setSelectedHealth] = useState('');
+  const [formPhotos, setFormPhotos] = useState<string[]>([]);
+  const [staffNotes, setStaffNotes] = useState('');
+
   const records = useMemo(() => {
-    return dailyRecordList.filter(r => r.bookingId === selectedBookingId);
-  }, [selectedBookingId]);
+    return dailyRecords.filter(r => r.bookingId === selectedBookingId);
+  }, [dailyRecords, selectedBookingId]);
 
   const latestRecord = records[0];
   const currentPet = activeBookings.find(b => b.id === selectedBookingId);
@@ -34,11 +67,97 @@ const DynamicsPage: React.FC = () => {
   };
 
   const handlePhotoClick = (photo: string) => {
-    console.log('[Dynamics] 查看大图', photo);
     Taro.previewImage({
       urls: latestRecord?.photos || [],
       current: photo
     });
+  };
+
+  const resetForm = () => {
+    setMealFood('');
+    setMealAmount('');
+    setMealFinished(true);
+    setWaterStatus('');
+    setPoopStatus('');
+    setPeeStatus('');
+    setWalkForm({ time: '', duration: '', distance: '', notes: '' });
+    setSelectedMood('');
+    setSelectedHealth('');
+    setFormPhotos([]);
+    setStaffNotes('');
+  };
+
+  const handleOpenModal = () => {
+    resetForm();
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
+
+  const handleChooseImage = () => {
+    Taro.chooseImage({
+      count: 6 - formPhotos.length,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        setFormPhotos(prev => [...prev, ...res.tempFilePaths].slice(0, 6));
+      }
+    });
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setFormPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    if (!selectedBookingId || !currentPet) return;
+
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const createdAtStr = `${dateStr} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    const meals: MealRecord[] = mealFood
+      ? [{
+          time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+          food: mealFood,
+          amount: mealAmount || '适量',
+          finished: mealFinished
+        }]
+      : [];
+
+    const walk: WalkRecord | null = walkForm.time || walkForm.duration
+      ? {
+          time: walkForm.time || `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+          duration: Number(walkForm.duration) || 0,
+          distance: walkForm.distance || '0',
+          notes: walkForm.notes || ''
+        }
+      : null;
+
+    const record: DailyRecord = {
+      id: `dr${Date.now()}`,
+      date: dateStr,
+      bookingId: selectedBookingId,
+      petId: currentPet.petId,
+      meals,
+      water: waterStatus || '正常',
+      poop: poopStatus || '正常',
+      pee: peeStatus || '正常',
+      walk: walk || { time: '', duration: 0, distance: '', notes: '' },
+      mood: selectedMood || '一般',
+      health: selectedHealth || '良好',
+      notes: staffNotes || '',
+      photos: formPhotos,
+      staffName: '店员',
+      createdAt: createdAtStr
+    };
+
+    addDailyRecord(record);
+    setShowModal(false);
+    Taro.showToast({ title: '记录已保存', icon: 'success' });
   };
 
   if (activeBookings.length === 0) {
@@ -142,34 +261,36 @@ const DynamicsPage: React.FC = () => {
               </View>
 
               {/* 饮食记录 */}
-              <View className={styles.daySection}>
-                <Text className={styles.daySectionTitle}>
-                  <Text className={styles.daySectionIcon}>🍽️</Text>
-                  饮食记录
-                </Text>
-                <View className={styles.mealList}>
-                  {record.meals.map((meal, idx) => (
-                    <View key={idx} className={styles.mealItem}>
-                      <Text className={styles.mealTime}>{meal.time}</Text>
-                      <View className={styles.mealInfo}>
-                        <Text className={styles.mealFood}>{meal.food}</Text>
-                        <Text className={styles.mealAmount}>{meal.amount}</Text>
+              {record.meals.length > 0 && (
+                <View className={styles.daySection}>
+                  <Text className={styles.daySectionTitle}>
+                    <Text className={styles.daySectionIcon}>🍽️</Text>
+                    饮食记录
+                  </Text>
+                  <View className={styles.mealList}>
+                    {record.meals.map((meal, idx) => (
+                      <View key={idx} className={styles.mealItem}>
+                        <Text className={styles.mealTime}>{meal.time}</Text>
+                        <View className={styles.mealInfo}>
+                          <Text className={styles.mealFood}>{meal.food}</Text>
+                          <Text className={styles.mealAmount}>{meal.amount}</Text>
+                        </View>
+                        <Text
+                          className={classnames(
+                            styles.mealStatus,
+                            !meal.finished && styles.partial
+                          )}
+                        >
+                          {meal.finished ? '吃完' : '剩一点'}
+                        </Text>
                       </View>
-                      <Text
-                        className={classnames(
-                          styles.mealStatus,
-                          !meal.finished && styles.partial
-                        )}
-                      >
-                        {meal.finished ? '吃完' : '剩一点'}
-                      </Text>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
                 </View>
-              </View>
+              )}
 
               {/* 散步记录 */}
-              {record.walk && (
+              {record.walk && record.walk.duration > 0 && (
                 <View className={styles.daySection}>
                   <Text className={styles.daySectionTitle}>
                     <Text className={styles.daySectionIcon}>🐕</Text>
@@ -238,22 +359,231 @@ const DynamicsPage: React.FC = () => {
               )}
 
               {/* 店员备注 */}
-              <View className={styles.daySection}>
-                <Text className={styles.daySectionTitle}>
-                  <Text className={styles.daySectionIcon}>💬</Text>
-                  店员留言
-                </Text>
-                <View className={styles.staffNote}>
-                  <Text className={styles.staffNoteText}>{record.notes}</Text>
-                  <View className={styles.staffNoteFooter}>
-                    —— {record.staffName} · {record.createdAt.split(' ')[1]}
+              {record.notes && (
+                <View className={styles.daySection}>
+                  <Text className={styles.daySectionTitle}>
+                    <Text className={styles.daySectionIcon}>💬</Text>
+                    店员留言
+                  </Text>
+                  <View className={styles.staffNote}>
+                    <Text className={styles.staffNoteText}>{record.notes}</Text>
+                    <View className={styles.staffNoteFooter}>
+                      —— {record.staffName} · {record.createdAt.split(' ')[1]}
+                    </View>
                   </View>
                 </View>
-              </View>
+              )}
             </View>
           ))}
         </View>
       </ScrollView>
+
+      {/* 浮动添加按钮 */}
+      <View className={styles.floatBtn} onClick={handleOpenModal}>
+        <Text style={{ fontSize: '48rpx', color: '#fff', lineHeight: '100rpx', textAlign: 'center' }}>+</Text>
+      </View>
+
+      {/* 底部弹出表单模态框 */}
+      {showModal && (
+        <View className={styles.modal} onClick={handleCloseModal}>
+          <View className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <View className={styles.modalHeader}>
+              <Text className={styles.modalTitle}>添加每日记录</Text>
+              <View className={styles.modalClose} onClick={handleCloseModal}>
+                <Text style={{ fontSize: '32rpx', color: '#9CA3AF' }}>✕</Text>
+              </View>
+            </View>
+
+            <ScrollView className={styles.modalBody} scrollY>
+              {/* 饮食 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>🍚 饮食</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="食物名称"
+                  value={mealFood}
+                  onInput={e => setMealFood(e.detail.value)}
+                />
+                <Input
+                  className={styles.formInput}
+                  placeholder="食量（如：一碗、半碗）"
+                  value={mealAmount}
+                  onInput={e => setMealAmount(e.detail.value)}
+                />
+                <View className={styles.formToggleRow}>
+                  <Text className={styles.formToggleLabel}>是否吃完</Text>
+                  <View
+                    className={classnames(styles.formToggle, mealFinished && styles.formToggleActive)}
+                    onClick={() => setMealFinished(!mealFinished)}
+                  >
+                    <Text style={{ fontSize: '22rpx', color: mealFinished ? '#fff' : '#6B7280' }}>
+                      {mealFinished ? '已吃完' : '未吃完'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 饮水 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>💧 饮水状态</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="如：正常、偏少、充足"
+                  value={waterStatus}
+                  onInput={e => setWaterStatus(e.detail.value)}
+                />
+              </View>
+
+              {/* 排便 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>💩 排便状态</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="如：正常、偏软、未排便"
+                  value={poopStatus}
+                  onInput={e => setPoopStatus(e.detail.value)}
+                />
+              </View>
+
+              {/* 排尿 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>🚽 排尿状态</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="如：正常、偏少"
+                  value={peeStatus}
+                  onInput={e => setPeeStatus(e.detail.value)}
+                />
+              </View>
+
+              {/* 散步 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>🐕 散步</Text>
+                <View className={styles.formInputRow}>
+                  <Input
+                    className={styles.formInputSmall}
+                    placeholder="时间"
+                    value={walkForm.time}
+                    onInput={e => setWalkForm({ ...walkForm, time: e.detail.value })}
+                  />
+                  <Input
+                    className={styles.formInputSmall}
+                    placeholder="时长(分钟)"
+                    type="number"
+                    value={walkForm.duration}
+                    onInput={e => setWalkForm({ ...walkForm, duration: e.detail.value })}
+                  />
+                  <Input
+                    className={styles.formInputSmall}
+                    placeholder="距离"
+                    value={walkForm.distance}
+                    onInput={e => setWalkForm({ ...walkForm, distance: e.detail.value })}
+                  />
+                </View>
+                <Input
+                  className={styles.formInput}
+                  placeholder="散步备注"
+                  value={walkForm.notes}
+                  onInput={e => setWalkForm({ ...walkForm, notes: e.detail.value })}
+                />
+              </View>
+
+              {/* 心情 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>😊 心情</Text>
+                <View className={styles.moodPicker}>
+                  {MOOD_OPTIONS.map(option => (
+                    <View
+                      key={option}
+                      className={classnames(
+                        styles.moodOption,
+                        selectedMood === option && styles.moodOptionSelected
+                      )}
+                      onClick={() => setSelectedMood(option)}
+                    >
+                      <Text style={{
+                        fontSize: '24rpx',
+                        color: selectedMood === option ? '#fff' : '#6B7280'
+                      }}>
+                        {option}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 健康 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>💚 健康状况</Text>
+                <View className={styles.moodPicker}>
+                  {HEALTH_OPTIONS.map(option => (
+                    <View
+                      key={option}
+                      className={classnames(
+                        styles.moodOption,
+                        selectedHealth === option && styles.moodOptionSelected
+                      )}
+                      onClick={() => setSelectedHealth(option)}
+                    >
+                      <Text style={{
+                        fontSize: '24rpx',
+                        color: selectedHealth === option ? '#fff' : '#6B7280'
+                      }}>
+                        {option}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 照片 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>📷 照片</Text>
+                <View className={styles.photoRow}>
+                  {formPhotos.map((photo, idx) => (
+                    <View key={idx} className={styles.formPhotoItem}>
+                      <Image
+                        className={styles.formPhotoImage}
+                        src={photo}
+                        mode="aspectFill"
+                      />
+                      <View
+                        className={styles.formPhotoRemove}
+                        onClick={() => handleRemovePhoto(idx)}
+                      >
+                        <Text style={{ fontSize: '20rpx', color: '#fff' }}>✕</Text>
+                      </View>
+                    </View>
+                  ))}
+                  {formPhotos.length < 6 && (
+                    <View className={styles.formPhotoAdd} onClick={handleChooseImage}>
+                      <Text style={{ fontSize: '40rpx', color: '#9CA3AF' }}>+</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* 店员备注 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>💬 店员备注</Text>
+                <Textarea
+                  className={styles.formTextarea}
+                  placeholder="记录宠物今日的特殊情况..."
+                  value={staffNotes}
+                  onInput={e => setStaffNotes(e.detail.value)}
+                  maxlength={500}
+                />
+              </View>
+            </ScrollView>
+
+            <View className={styles.modalFooter}>
+              <View className={styles.saveBtn} onClick={handleSave}>
+                <Text style={{ fontSize: '30rpx', color: '#fff', fontWeight: '600' }}>保存记录</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };

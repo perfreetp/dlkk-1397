@@ -501,3 +501,76 @@
     transform: scale(0.98);
   }
 }
+
+.editCard {
+  background-color: $color-primary-bg;
+  border: 2rpx solid $color-primary-light;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.editRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.editLabel {
+  flex-shrink: 0;
+  width: 80rpx;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.editInput {
+  flex: 1;
+  height: 64rpx;
+  padding: 0 $spacing-sm;
+  background-color: $color-bg-card;
+  border-radius: $radius-sm;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.editActions {
+  display: flex;
+  gap: $spacing-sm;
+  justify-content: flex-end;
+  margin-top: $spacing-sm;
+}
+
+.editBtnCancel {
+  @include button-reset;
+  height: 60rpx;
+  padding: 0 $spacing-lg;
+  background-color: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  border-radius: $radius-button;
+}
+
+.editBtnSave {
+  @include button-reset;
+  height: 60rpx;
+  padding: 0 $spacing-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  border-radius: $radius-button;
+}
+
+.actionText {
+  flex-shrink: 0;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  padding: 4rpx 12rpx;
+}
+
+.deleteText {
+  flex-shrink: 0;
+  font-size: $font-size-sm;
+  color: $color-error;
+  padding: 4rpx 12rpx;
+}

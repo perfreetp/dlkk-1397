@@ -4,47 +4,39 @@ import {
   Text,
   Image,
   ScrollView,
-  Button
+  Textarea
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
 import StatusTag from '@/components/StatusTag';
-import { bookingList } from '@/data/booking';
-import { handoverList, checkInChecklist, checkOutChecklist } from '@/data/handover';
+import useAppStore from '@/store';
 import type { HandoverGoods } from '@/types';
 
 const HandoverPage: React.FC = () => {
+  const {
+    bookings,
+    handovers,
+    toggleHandoverGoods,
+    toggleChecklistItem,
+    confirmHandover,
+    checkInChecklist,
+    checkOutChecklist,
+    updateBooking,
+    feeItems
+  } = useAppStore();
+
   const [activeTab, setActiveTab] = useState<'check_in' | 'check_out'>('check_in');
-  const [checklist, setChecklist] = useState(
-    activeTab === 'check_in' ? checkInChecklist : checkOutChecklist
-  );
+  const [petStatusNote, setPetStatusNote] = useState('');
 
-  const currentBooking = bookingList.find(b => b.status === 'in_progress');
-  const currentHandover = handoverList[0];
+  const currentBooking = bookings.find(b => b.status === 'in_progress');
+  const checkInHandover = handovers.find(h => h.bookingId === currentBooking?.id && h.type === 'check_in');
+  const currentHandover = activeTab === 'check_in' ? checkInHandover : handovers.find(h => h.bookingId === currentBooking?.id && h.type === 'check_out');
 
-  const [goods, setGoods] = useState<HandoverGoods[]>(
-    currentHandover?.itemsList || []
-  );
-
-  const handleTabChange = (tab: 'check_in' | 'check_out') => {
-    setActiveTab(tab);
-    setChecklist(tab === 'check_in' ? checkInChecklist : checkOutChecklist);
-  };
-
-  const toggleCheckItem = (id: string) => {
-    setChecklist(checklist.map(item =>
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
-  };
-
-  const toggleGoodsItem = (id: string) => {
-    setGoods(goods.map(item =>
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
-  };
+  const checklist = activeTab === 'check_in' ? checkInChecklist : checkOutChecklist;
 
   const groupedGoods = useMemo(() => {
+    const goods = currentHandover?.itemsList || [];
     const groups: Record<string, HandoverGoods[]> = {};
     goods.forEach(item => {
       if (!groups[item.category]) {
@@ -53,22 +45,65 @@ const HandoverPage: React.FC = () => {
       groups[item.category].push(item);
     });
     return groups;
-  }, [goods]);
+  }, [currentHandover]);
 
-  const checkedCount = goods.filter(g => g.checked).length;
-  const totalCount = goods.length;
+  const goodsCheckedCount = (currentHandover?.itemsList || []).filter(g => g.checked).length;
+  const goodsTotalCount = (currentHandover?.itemsList || []).length;
 
-  const handleSign = () => {
-    Taro.showToast({
-      title: '确认成功',
-      icon: 'success'
-    });
-    console.log('[Handover] 签字确认', {
-      type: activeTab,
-      checklist: checklist.filter(c => c.checked),
-      goods: goods.filter(g => g.checked)
+  const returnGoodsCheckedCount = (checkInHandover?.itemsList || []).filter(g => g.checked).length;
+  const returnGoodsTotalCount = (checkInHandover?.itemsList || []).length;
+
+  const allChecklistChecked = checklist.every(c => c.checked);
+
+  const roomFee = feeItems.filter(f => f.type === 'room').reduce((s, f) => s + f.price * f.quantity, 0);
+  const serviceFee = feeItems.filter(f => f.type === 'service' || f.type === 'extra').reduce((s, f) => s + f.price * f.quantity, 0);
+  const totalFee = feeItems.reduce((s, f) => s + f.price * f.quantity, 0);
+
+  const handleTabChange = (tab: 'check_in' | 'check_out') => {
+    setActiveTab(tab);
+  };
+
+  const handleToggleGoods = (goodsId: string) => {
+    if (!currentHandover) return;
+    toggleHandoverGoods(currentHandover.id, goodsId);
+  };
+
+  const handleToggleChecklist = (itemId: string) => {
+    toggleChecklistItem(activeTab, itemId);
+  };
+
+  const handleConfirm = (role: 'owner' | 'staff') => {
+    if (!currentHandover || !allChecklistChecked) return;
+
+    const uncheckedItems = checklist.filter(c => !c.checked);
+    if (uncheckedItems.length > 0) {
+      Taro.showToast({ title: '请先完成所有核对项', icon: 'none' });
+      return;
+    }
+
+    Taro.showModal({
+      title: role === 'owner' ? '宠主确认' : '店员确认',
+      content: `确认已核对以下${checklist.length}项：\n${checklist.map(c => `${c.checked ? '✓' : '✗'} ${c.label}`).join('\n')}`,
+      success: (res) => {
+        if (res.confirm) {
+          confirmHandover(currentHandover.id, role);
+
+          const updated = handovers.find(h => h.id === currentHandover.id);
+          const otherRole = role === 'owner' ? 'staffConfirmed' : 'ownerConfirmed';
+          const bothConfirmed = updated ? updated[otherRole] : false;
+
+          if (bothConfirmed && currentBooking) {
+            updateBooking(currentBooking.id, { status: 'completed' });
+            Taro.showToast({ title: '交接完成！', icon: 'success' });
+          } else {
+            Taro.showToast({ title: '确认成功', icon: 'success' });
+          }
+        }
+      }
     });
   };
+
+  const isBothConfirmed = currentHandover?.ownerConfirmed && currentHandover?.staffConfirmed;
 
   if (!currentBooking) {
     return (
@@ -95,7 +130,6 @@ const HandoverPage: React.FC = () => {
       </View>
 
       <ScrollView className={styles.content} scrollY>
-        {/* Tab切换 */}
         <View className={styles.tabBar}>
           <View
             className={classnames(styles.tabItem, activeTab === 'check_in' && styles.active)}
@@ -111,7 +145,6 @@ const HandoverPage: React.FC = () => {
           </View>
         </View>
 
-        {/* 宠物信息卡片 */}
         <View className={styles.card}>
           <View className={styles.cardHeader}>
             <View className={styles.petInfo}>
@@ -140,19 +173,24 @@ const HandoverPage: React.FC = () => {
           </View>
         </View>
 
-        {/* 交接状态 */}
         {currentHandover && (
-          <View className={styles.statusBar}>
-            <Text className={styles.statusText}>
-              {activeTab === 'check_in' ? '✓ 已完成到店交接' : '待离店交接'}
+          <View className={classnames(styles.statusBar, isBothConfirmed && styles.completedBar)}>
+            <Text className={classnames(styles.statusText, isBothConfirmed && styles.statusTextDone)}>
+              {isBothConfirmed
+                ? '交接完成'
+                : activeTab === 'check_in'
+                  ? (currentHandover.ownerConfirmed && currentHandover.staffConfirmed ? '✓ 已完成到店交接' : '待到店交接')
+                  : '待离店交接'}
             </Text>
-            {currentHandover.confirmedAt && (
+            {isBothConfirmed && currentHandover.confirmedAt && (
+              <Text className={styles.statusTime}>{currentHandover.confirmedAt}</Text>
+            )}
+            {!isBothConfirmed && currentHandover.confirmedAt && (
               <Text className={styles.statusTime}>{currentHandover.confirmedAt}</Text>
             )}
           </View>
         )}
 
-        {/* 交接清单 */}
         <View className={styles.card}>
           <Text className={styles.sectionTitle}>
             {activeTab === 'check_in' ? '到店核对清单' : '离店核对清单'}
@@ -162,7 +200,7 @@ const HandoverPage: React.FC = () => {
               <View
                 key={item.id}
                 className={styles.checkItem}
-                onClick={() => toggleCheckItem(item.id)}
+                onClick={() => handleToggleChecklist(item.id)}
               >
                 <View
                   className={classnames(styles.checkbox, item.checked && styles.checked)}
@@ -173,10 +211,9 @@ const HandoverPage: React.FC = () => {
           </View>
         </View>
 
-        {/* 物品清单 */}
         <View className={styles.card}>
           <Text className={styles.sectionTitle}>
-            物品清单 ({checkedCount}/{totalCount})
+            物品清单 ({goodsCheckedCount}/{goodsTotalCount})
           </Text>
           {Object.entries(groupedGoods).map(([category, items]) => (
             <View key={category} className={styles.goodsCategory}>
@@ -186,7 +223,7 @@ const HandoverPage: React.FC = () => {
                   <View
                     key={item.id}
                     className={styles.goodsItem}
-                    onClick={() => toggleGoodsItem(item.id)}
+                    onClick={() => handleToggleGoods(item.id)}
                   >
                     <View
                       className={classnames(
@@ -203,7 +240,6 @@ const HandoverPage: React.FC = () => {
           ))}
         </View>
 
-        {/* 健康状态 */}
         {activeTab === 'check_in' && currentHandover && (
           <View className={styles.card}>
             <Text className={styles.sectionTitle}>健康状态</Text>
@@ -218,37 +254,107 @@ const HandoverPage: React.FC = () => {
           </View>
         )}
 
-        {/* 确认签字 */}
+        {activeTab === 'check_out' && checkInHandover && (
+          <>
+            <View className={styles.card}>
+              <Text className={styles.sectionTitle}>归还物品核对</Text>
+              <View className={styles.returnProgressText}>
+                <Text>已归还 {returnGoodsCheckedCount}/{returnGoodsTotalCount} 件</Text>
+              </View>
+              <View className={styles.returnProgress}>
+                <View
+                  className={styles.returnProgressBar}
+                  style={{ width: `${returnGoodsTotalCount ? (returnGoodsCheckedCount / returnGoodsTotalCount) * 100 : 0}%` }}
+                />
+              </View>
+              <View className={styles.goodsList}>
+                {checkInHandover.itemsList.map(item => (
+                  <View
+                    key={item.id}
+                    className={styles.goodsItem}
+                    onClick={() => toggleHandoverGoods(checkInHandover.id, item.id)}
+                  >
+                    <View
+                      className={classnames(
+                        styles.goodsCheckbox,
+                        item.checked && styles.checked
+                      )}
+                    />
+                    <Text className={styles.goodsName}>{item.name}</Text>
+                    <Text className={styles.goodsQty}>×{item.quantity}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View className={styles.card}>
+              <Text className={styles.sectionTitle}>宠物状态记录</Text>
+              <Textarea
+                className={styles.petStatusInput}
+                placeholder="请记录宠物当前状态，如精神状态、毛发、是否已洗澡等"
+                value={petStatusNote}
+                onInput={(e) => setPetStatusNote(e.detail.value)}
+                maxlength={500}
+              />
+            </View>
+
+            <View className={styles.card}>
+              <Text className={styles.sectionTitle}>费用结算确认</Text>
+              <View className={styles.feeSummary}>
+                <View className={styles.feeSummaryRow}>
+                  <Text>寄养{currentBooking.days}天</Text>
+                  <Text>¥{roomFee}</Text>
+                </View>
+                <View className={styles.feeSummaryRow}>
+                  <Text>追加服务</Text>
+                  <Text>¥{serviceFee}</Text>
+                </View>
+                <View className={classnames(styles.feeSummaryRow, styles.feeSummaryTotal)}>
+                  <Text>合计</Text>
+                  <Text>¥{totalFee}</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+
         <View className={styles.card}>
           <Text className={styles.sectionTitle}>双方确认</Text>
-          <View className={styles.confirmSection}>
-            <View className={styles.confirmItem}>
-              <Text className={styles.confirmLabel}>宠主确认</Text>
-              <Text
-                className={classnames(
-                  styles.confirmStatus,
-                  !currentHandover?.ownerConfirmed && styles.pending
-                )}
-              >
-                {currentHandover?.ownerConfirmed ? '已确认' : '待确认'}
+          <View className={styles.confirmButtons}>
+            <View
+              className={classnames(
+                styles.confirmBtn,
+                (!allChecklistChecked || currentHandover?.ownerConfirmed) && styles.confirmBtnDisabled,
+                currentHandover?.ownerConfirmed && styles.confirmBtnDone
+              )}
+              onClick={() => handleConfirm('owner')}
+            >
+              <Text className={styles.confirmBtnText}>
+                {currentHandover?.ownerConfirmed ? '宠主已确认' : '宠主确认'}
               </Text>
+              {currentHandover?.ownerConfirmed && currentHandover.confirmedAt && (
+                <Text className={styles.confirmBtnTime}>{currentHandover.confirmedAt}</Text>
+              )}
             </View>
-            <View className={styles.confirmItem}>
-              <Text className={styles.confirmLabel}>店员确认</Text>
-              <Text
-                className={classnames(
-                  styles.confirmStatus,
-                  !currentHandover?.staffConfirmed && styles.pending
-                )}
-              >
-                {currentHandover?.staffConfirmed ? '已确认' : '待确认'}
+            <View
+              className={classnames(
+                styles.confirmBtn,
+                (!allChecklistChecked || currentHandover?.staffConfirmed) && styles.confirmBtnDisabled,
+                currentHandover?.staffConfirmed && styles.confirmBtnDone
+              )}
+              onClick={() => handleConfirm('staff')}
+            >
+              <Text className={styles.confirmBtnText}>
+                {currentHandover?.staffConfirmed ? '店员已确认' : '店员确认'}
               </Text>
+              {currentHandover?.staffConfirmed && currentHandover.confirmedAt && (
+                <Text className={styles.confirmBtnTime}>{currentHandover.confirmedAt}</Text>
+              )}
             </View>
           </View>
-
-          <Button className={styles.signButton} onClick={handleSign}>
-            {activeTab === 'check_in' ? '确认到店交接' : '确认离店交接'}
-          </Button>
+          {!allChecklistChecked && (
+            <Text className={styles.confirmTip}>请先完成所有核对项后再确认</Text>
+          )}
         </View>
       </ScrollView>
     </View>
