@@ -212,19 +212,27 @@ const BookingDetailPage: React.FC = () => {
         {/* 其他要求 */}
         <View className={styles.card}>
           <Text className={styles.cardTitle}>其他要求</Text>
-          <View className={styles.infoRow}>
-            <Text className={styles.infoLabel}>散步要求</Text>
-          </View>
-          <View style={{ fontSize: '26rpx', color: '#4B5563', lineHeight: 1.6, marginBottom: '16rpx' }}>
-            {booking.walkRequirements}
-          </View>
-          <View className={styles.infoRow}>
-            <Text className={styles.infoLabel}>饮食禁忌</Text>
-          </View>
-          <View style={{ fontSize: '26rpx', color: '#4B5563', lineHeight: 1.6, marginBottom: '16rpx' }}>
-            {booking.dietaryRestrictions}
-          </View>
-          <View className={styles.infoRow}>
+          {booking.walkRequirements.length > 0 && (
+            <View style={{ marginBottom: '24rpx' }}>
+              <Text className={styles.infoLabel} style={{ marginBottom: '8rpx', display: 'block' }}>散步要求</Text>
+              {booking.walkRequirements.map((item, idx) => (
+                <View key={item.id} className={styles.medicationItem}>
+                  <Text className={styles.medicationName}>• {item.text}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {booking.dietaryRestrictions.length > 0 && (
+            <View style={{ marginBottom: '24rpx' }}>
+              <Text className={styles.infoLabel} style={{ marginBottom: '8rpx', display: 'block' }}>饮食禁忌</Text>
+              {booking.dietaryRestrictions.map((item, idx) => (
+                <View key={item.id} className={styles.medicationItem}>
+                  <Text className={styles.medicationName}>• {item.text}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          <View style={{ marginBottom: '8rpx' }}>
             <Text className={styles.infoLabel}>备注</Text>
           </View>
           <View style={{ fontSize: '26rpx', color: '#4B5563', lineHeight: 1.6 }}>

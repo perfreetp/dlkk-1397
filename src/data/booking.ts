@@ -85,8 +85,16 @@ export const bookingList: Booking[] = [
     medications: [
       { name: '钙片', dosage: '2片', frequency: '每日1次', notes: '饭后服用' }
     ],
-    walkRequirements: '每天早晚各遛一次，每次30分钟，喜欢捡球玩',
-    dietaryRestrictions: '对鸡肉过敏，不能吃葡萄和巧克力',
+    walkRequirements: [
+      { id: 'walk_1', text: '每天早晚各遛一次' },
+      { id: 'walk_2', text: '每次30分钟' },
+      { id: 'walk_3', text: '喜欢捡球玩' }
+    ],
+    dietaryRestrictions: [
+      { id: 'diet_1', text: '对鸡肉过敏' },
+      { id: 'diet_2', text: '不能吃葡萄' },
+      { id: 'diet_3', text: '不能吃巧克力' }
+    ],
     notes: '性格温顺，怕打雷，下雨时请多安抚',
     photos: [
       'https://picsum.photos/id/237/400/300',
@@ -111,8 +119,13 @@ export const bookingList: Booking[] = [
       { time: '21:00', food: '渴望猫粮', amount: '50g' }
     ],
     medications: [],
-    walkRequirements: '不需要遛，猫砂盆每日清理2次',
-    dietaryRestrictions: '无特殊禁忌',
+    walkRequirements: [
+      { id: 'walk_4', text: '不需要遛' },
+      { id: 'walk_5', text: '猫砂盆每日清理2次' }
+    ],
+    dietaryRestrictions: [
+      { id: 'diet_4', text: '无特殊禁忌' }
+    ],
     notes: '比较胆小，刚开始可能会躲起来，请不要强行抱',
     photos: ['https://picsum.photos/id/40/400/300'],
     createdAt: '2024-06-12 10:15'
@@ -134,8 +147,13 @@ export const bookingList: Booking[] = [
       { time: '18:00', food: '皇家狗粮', amount: '150g' }
     ],
     medications: [],
-    walkRequirements: '每天2次，每次30分钟',
-    dietaryRestrictions: '对鸡肉过敏',
+    walkRequirements: [
+      { id: 'walk_6', text: '每天2次' },
+      { id: 'walk_7', text: '每次30分钟' }
+    ],
+    dietaryRestrictions: [
+      { id: 'diet_5', text: '对鸡肉过敏' }
+    ],
     notes: '',
     photos: [],
     createdAt: '2024-04-20 16:00'

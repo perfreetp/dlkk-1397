@@ -5,7 +5,8 @@ import {
   Image,
   ScrollView,
   Input,
-  Textarea
+  Textarea,
+  Video
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -49,6 +50,7 @@ const DynamicsPage: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [selectedHealth, setSelectedHealth] = useState('');
   const [formPhotos, setFormPhotos] = useState<string[]>([]);
+  const [formVideos, setFormVideos] = useState<string[]>([]);
   const [staffNotes, setStaffNotes] = useState('');
 
   const records = useMemo(() => {
@@ -84,6 +86,7 @@ const DynamicsPage: React.FC = () => {
     setSelectedMood('');
     setSelectedHealth('');
     setFormPhotos([]);
+    setFormVideos([]);
     setStaffNotes('');
   };
 
@@ -109,6 +112,25 @@ const DynamicsPage: React.FC = () => {
 
   const handleRemovePhoto = (index: number) => {
     setFormPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleChooseVideo = () => {
+    if (formVideos.length >= 1) {
+      Taro.showToast({ title: '最多选择1个视频', icon: 'none' });
+      return;
+    }
+    Taro.chooseVideo({
+      sourceType: ['album', 'camera'],
+      maxDuration: 60,
+      camera: 'back',
+      success: (res) => {
+        setFormVideos([res.tempFilePath]);
+      }
+    });
+  };
+
+  const handleRemoveVideo = () => {
+    setFormVideos([]);
   };
 
   const handleSave = () => {
@@ -151,6 +173,7 @@ const DynamicsPage: React.FC = () => {
       health: selectedHealth || '良好',
       notes: staffNotes || '',
       photos: formPhotos,
+      videos: formVideos,
       staffName: '店员',
       createdAt: createdAtStr
     };
@@ -358,6 +381,29 @@ const DynamicsPage: React.FC = () => {
                 </View>
               )}
 
+              {/* 视频 */}
+              {record.videos.length > 0 && (
+                <View className={styles.daySection}>
+                  <Text className={styles.daySectionTitle}>
+                    <Text className={styles.daySectionIcon}>🎬</Text>
+                    视频 ({record.videos.length}个)
+                  </Text>
+                  <View className={styles.videoSection}>
+                    {record.videos.map((video, idx) => (
+                      <View key={idx} className={styles.videoItem}>
+                        <Video
+                          className={styles.videoPlayer}
+                          src={video}
+                          controls
+                          autoplay={false}
+                          objectFit="contain"
+                        />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
               {/* 店员备注 */}
               {record.notes && (
                 <View className={styles.daySection}>
@@ -558,6 +604,36 @@ const DynamicsPage: React.FC = () => {
                   {formPhotos.length < 6 && (
                     <View className={styles.formPhotoAdd} onClick={handleChooseImage}>
                       <Text style={{ fontSize: '40rpx', color: '#9CA3AF' }}>+</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* 视频 */}
+              <View className={styles.formGroup}>
+                <Text className={styles.formLabel}>🎬 视频</Text>
+                <View className={styles.photoRow}>
+                  {formVideos.map((video, idx) => (
+                    <View key={idx} className={styles.formVideoItem}>
+                      <Video
+                        className={styles.videoPlayer}
+                        src={video}
+                        controls
+                        autoplay={false}
+                        objectFit="contain"
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                      <View
+                        className={styles.formVideoRemove}
+                        onClick={handleRemoveVideo}
+                      >
+                        <Text style={{ fontSize: '20rpx', color: '#fff' }}>✕</Text>
+                      </View>
+                    </View>
+                  ))}
+                  {formVideos.length < 1 && (
+                    <View className={styles.formVideoAdd} onClick={handleChooseVideo}>
+                      <Text style={{ fontSize: '24rpx', color: '#9CA3AF' }}>选择视频</Text>
                     </View>
                   )}
                 </View>

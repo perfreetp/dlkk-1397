@@ -21,6 +21,11 @@ export interface RoomType {
   image: string;
 }
 
+export interface RequirementItem {
+  id: string;
+  text: string;
+}
+
 export interface Booking {
   id: string;
   petId: string;
@@ -35,8 +40,8 @@ export interface Booking {
   totalPrice: number;
   feedingSchedule: FeedingItem[];
   medications: MedicationItem[];
-  walkRequirements: string;
-  dietaryRestrictions: string;
+  walkRequirements: RequirementItem[];
+  dietaryRestrictions: RequirementItem[];
   notes: string;
   photos: string[];
   createdAt: string;
@@ -62,9 +67,12 @@ export interface HandoverItem {
   itemsList: HandoverGoods[];
   healthStatus: string;
   moodStatus: string;
+  petStatusNote: string;
   ownerConfirmed: boolean;
   staffConfirmed: boolean;
-  confirmedAt?: string;
+  ownerConfirmedAt?: string;
+  staffConfirmedAt?: string;
+  completedAt?: string;
 }
 
 export interface HandoverGoods {
@@ -89,6 +97,7 @@ export interface DailyRecord {
   health: string;
   notes: string;
   photos: string[];
+  videos: string[];
   staffName: string;
   createdAt: string;
 }

@@ -22,6 +22,7 @@ export const dailyRecordList: DailyRecord[] = [
       'https://picsum.photos/id/1025/600/400',
       'https://picsum.photos/id/1062/600/400'
     ],
+    videos: [],
     staffName: '小李',
     createdAt: '2024-06-18 20:00'
   },
@@ -45,6 +46,7 @@ export const dailyRecordList: DailyRecord[] = [
       'https://picsum.photos/id/1074/600/400',
       'https://picsum.photos/id/1084/600/400'
     ],
+    videos: [],
     staffName: '小王',
     createdAt: '2024-06-17 19:30'
   },
@@ -68,6 +70,7 @@ export const dailyRecordList: DailyRecord[] = [
       'https://picsum.photos/id/1060/600/400',
       'https://picsum.photos/id/1059/600/400'
     ],
+    videos: [],
     staffName: '小李',
     createdAt: '2024-06-16 20:15'
   },
@@ -91,6 +94,7 @@ export const dailyRecordList: DailyRecord[] = [
       'https://picsum.photos/id/1069/600/400',
       'https://picsum.photos/id/1070/600/400'
     ],
+    videos: [],
     staffName: '小张',
     createdAt: '2024-06-15 21:00'
   }

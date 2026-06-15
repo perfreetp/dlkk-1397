@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ const FeePage: React.FC = () => {
     feeItems,
     selectedExtraServices,
     toggleExtraService,
+    syncSelectedServices,
     bookings,
     addFeeItem,
     updateBooking
@@ -24,6 +25,10 @@ const FeePage: React.FC = () => {
 
   const currentBooking = bookings.find(b => b.status === 'in_progress');
   const [extendDate, setExtendDate] = useState(currentBooking?.checkOutDate || '');
+
+  useEffect(() => {
+    syncSelectedServices();
+  }, []);
 
   const includedServiceNames = useMemo(() => {
     return feeItems

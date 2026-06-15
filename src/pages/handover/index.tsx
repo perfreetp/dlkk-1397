@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,15 +23,18 @@ const HandoverPage: React.FC = () => {
     checkInChecklist,
     checkOutChecklist,
     updateBooking,
-    feeItems
+    feeItems,
+    updateHandover
   } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<'check_in' | 'check_out'>('check_in');
-  const [petStatusNote, setPetStatusNote] = useState('');
+  const [petStatusDraft, setPetStatusDraft] = useState('');
 
   const currentBooking = bookings.find(b => b.status === 'in_progress');
   const checkInHandover = handovers.find(h => h.bookingId === currentBooking?.id && h.type === 'check_in');
-  const currentHandover = activeTab === 'check_in' ? checkInHandover : handovers.find(h => h.bookingId === currentBooking?.id && h.type === 'check_out');
+  const currentHandover = activeTab === 'check_in'
+    ? checkInHandover
+    : handovers.find(h => h.bookingId === currentBooking?.id && h.type === 'check_out');
 
   const checklist = activeTab === 'check_in' ? checkInChecklist : checkOutChecklist;
 
@@ -59,6 +62,8 @@ const HandoverPage: React.FC = () => {
   const serviceFee = feeItems.filter(f => f.type === 'service' || f.type === 'extra').reduce((s, f) => s + f.price * f.quantity, 0);
   const totalFee = feeItems.reduce((s, f) => s + f.price * f.quantity, 0);
 
+  const isBothConfirmed = !!(currentHandover?.ownerConfirmed && currentHandover?.staffConfirmed);
+
   const handleTabChange = (tab: 'check_in' | 'check_out') => {
     setActiveTab(tab);
   };
@@ -72,6 +77,14 @@ const HandoverPage: React.FC = () => {
     toggleChecklistItem(activeTab, itemId);
   };
 
+  const handlePetStatusBlur = useCallback(() => {
+    if (!currentHandover) return;
+    const note = petStatusDraft.trim();
+    if (note !== currentHandover.petStatusNote) {
+      updateHandover(currentHandover.id, { petStatusNote: note });
+    }
+  }, [currentHandover, petStatusDraft, updateHandover]);
+
   const handleConfirm = (role: 'owner' | 'staff') => {
     if (!currentHandover || !allChecklistChecked) return;
 
@@ -81,16 +94,23 @@ const HandoverPage: React.FC = () => {
       return;
     }
 
+    const checklistSummary = checklist.map(c => `${c.checked ? '✓' : '✗'} ${c.label}`).join('\n');
+    const returnSummary = activeTab === 'check_out'
+      ? `\n\n归还物品：${returnGoodsCheckedCount}/${returnGoodsTotalCount} 件已核对`
+      : '';
+    const petNoteSummary = (activeTab === 'check_out' && currentHandover.petStatusNote)
+      ? `\n\n宠物状态：${currentHandover.petStatusNote}`
+      : '';
+
     Taro.showModal({
       title: role === 'owner' ? '宠主确认' : '店员确认',
-      content: `确认已核对以下${checklist.length}项：\n${checklist.map(c => `${c.checked ? '✓' : '✗'} ${c.label}`).join('\n')}`,
+      content: `核对清单（${checklist.length}项）：\n${checklistSummary}${returnSummary}${petNoteSummary}`,
       success: (res) => {
         if (res.confirm) {
           confirmHandover(currentHandover.id, role);
 
-          const updated = handovers.find(h => h.id === currentHandover.id);
-          const otherRole = role === 'owner' ? 'staffConfirmed' : 'ownerConfirmed';
-          const bothConfirmed = updated ? updated[otherRole] : false;
+          const updated = useAppStore.getState().handovers.find(h => h.id === currentHandover.id);
+          const bothConfirmed = updated?.ownerConfirmed && updated?.staffConfirmed;
 
           if (bothConfirmed && currentBooking) {
             updateBooking(currentBooking.id, { status: 'completed' });
@@ -102,8 +122,6 @@ const HandoverPage: React.FC = () => {
       }
     });
   };
-
-  const isBothConfirmed = currentHandover?.ownerConfirmed && currentHandover?.staffConfirmed;
 
   if (!currentBooking) {
     return (
@@ -179,15 +197,21 @@ const HandoverPage: React.FC = () => {
               {isBothConfirmed
                 ? '交接完成'
                 : activeTab === 'check_in'
-                  ? (currentHandover.ownerConfirmed && currentHandover.staffConfirmed ? '✓ 已完成到店交接' : '待到店交接')
+                  ? '待到店交接'
                   : '待离店交接'}
             </Text>
-            {isBothConfirmed && currentHandover.confirmedAt && (
-              <Text className={styles.statusTime}>{currentHandover.confirmedAt}</Text>
+            {isBothConfirmed && currentHandover.completedAt && (
+              <Text className={styles.statusTime}>完成于 {currentHandover.completedAt}</Text>
             )}
-            {!isBothConfirmed && currentHandover.confirmedAt && (
-              <Text className={styles.statusTime}>{currentHandover.confirmedAt}</Text>
-            )}
+          </View>
+        )}
+
+        {activeTab === 'check_out' && checkInHandover?.completedAt && (
+          <View className={styles.card}>
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>到店交接完成时间</Text>
+              <Text className={styles.infoValue}>{checkInHandover.completedAt}</Text>
+            </View>
           </View>
         )}
 
@@ -292,8 +316,9 @@ const HandoverPage: React.FC = () => {
               <Textarea
                 className={styles.petStatusInput}
                 placeholder="请记录宠物当前状态，如精神状态、毛发、是否已洗澡等"
-                value={petStatusNote}
-                onInput={(e) => setPetStatusNote(e.detail.value)}
+                value={petStatusDraft || currentHandover?.petStatusNote || ''}
+                onInput={(e) => setPetStatusDraft(e.detail.value)}
+                onBlur={handlePetStatusBlur}
                 maxlength={500}
               />
             </View>
@@ -332,8 +357,8 @@ const HandoverPage: React.FC = () => {
               <Text className={styles.confirmBtnText}>
                 {currentHandover?.ownerConfirmed ? '宠主已确认' : '宠主确认'}
               </Text>
-              {currentHandover?.ownerConfirmed && currentHandover.confirmedAt && (
-                <Text className={styles.confirmBtnTime}>{currentHandover.confirmedAt}</Text>
+              {currentHandover?.ownerConfirmedAt && (
+                <Text className={styles.confirmBtnTime}>{currentHandover.ownerConfirmedAt}</Text>
               )}
             </View>
             <View
@@ -347,8 +372,8 @@ const HandoverPage: React.FC = () => {
               <Text className={styles.confirmBtnText}>
                 {currentHandover?.staffConfirmed ? '店员已确认' : '店员确认'}
               </Text>
-              {currentHandover?.staffConfirmed && currentHandover.confirmedAt && (
-                <Text className={styles.confirmBtnTime}>{currentHandover.confirmedAt}</Text>
+              {currentHandover?.staffConfirmedAt && (
+                <Text className={styles.confirmBtnTime}>{currentHandover.staffConfirmedAt}</Text>
               )}
             </View>
           </View>

@@ -16,7 +16,7 @@ import StatusTag from '@/components/StatusTag';
 import { petList } from '@/data/pet';
 import { roomTypeList } from '@/data/booking';
 import useAppStore from '@/store';
-import type { Pet, RoomType, FeedingItem, MedicationItem, Booking } from '@/types';
+import type { Pet, RoomType, FeedingItem, MedicationItem, Booking, RequirementItem } from '@/types';
 
 const BookingPage: React.FC = () => {
   const { bookings, addBooking } = useAppStore();
@@ -32,8 +32,16 @@ const BookingPage: React.FC = () => {
   const [medications, setMedications] = useState<MedicationItem[]>([
     { name: '钙片', dosage: '2片', frequency: '每日1次', notes: '饭后服用' }
   ]);
-  const [walkRequirements, setWalkRequirements] = useState('每天早晚各遛一次，每次30分钟，喜欢捡球玩');
-  const [dietaryRestrictions, setDietaryRestrictions] = useState('对鸡肉过敏，不能吃葡萄和巧克力');
+  const [walkRequirements, setWalkRequirements] = useState<RequirementItem[]>([
+    { id: 'walk_1', text: '每天早晚各遛一次' },
+    { id: 'walk_2', text: '每次30分钟' },
+    { id: 'walk_3', text: '喜欢捡球玩' }
+  ]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<RequirementItem[]>([
+    { id: 'diet_1', text: '对鸡肉过敏' },
+    { id: 'diet_2', text: '不能吃葡萄' },
+    { id: 'diet_3', text: '不能吃巧克力' }
+  ]);
   const [notes, setNotes] = useState('性格温顺，怕打雷，下雨时请多安抚');
   const [photos, setPhotos] = useState<string[]>([]);
 
@@ -41,6 +49,11 @@ const BookingPage: React.FC = () => {
   const [editingMedIdx, setEditingMedIdx] = useState(-1);
   const [editFeeding, setEditFeeding] = useState<FeedingItem>({ time: '', food: '', amount: '' });
   const [editMed, setEditMed] = useState<MedicationItem>({ name: '', dosage: '', frequency: '', notes: '' });
+
+  const [editingWalkIdx, setEditingWalkIdx] = useState(-1);
+  const [editWalkText, setEditWalkText] = useState('');
+  const [editingDietIdx, setEditingDietIdx] = useState(-1);
+  const [editDietText, setEditDietText] = useState('');
 
   const days = useMemo(() => {
     const start = new Date(checkInDate);
@@ -136,6 +149,64 @@ const BookingPage: React.FC = () => {
     setMedications(medications.filter((_, i) => i !== idx));
   };
 
+  const handleAddWalk = () => {
+    setEditWalkText('');
+    setEditingWalkIdx(-1);
+  };
+
+  const handleEditWalk = (idx: number) => {
+    setEditWalkText(walkRequirements[idx].text);
+    setEditingWalkIdx(idx);
+  };
+
+  const handleSaveWalk = () => {
+    if (!editWalkText.trim()) {
+      Taro.showToast({ title: '请填写散步要求', icon: 'none' });
+      return;
+    }
+    if (editingWalkIdx === -1) {
+      setWalkRequirements([...walkRequirements, { id: `walk_${Date.now()}`, text: editWalkText }]);
+    } else {
+      const newList = [...walkRequirements];
+      newList[editingWalkIdx] = { ...newList[editingWalkIdx], text: editWalkText };
+      setWalkRequirements(newList);
+    }
+    setEditingWalkIdx(-2);
+  };
+
+  const handleRemoveWalk = (idx: number) => {
+    setWalkRequirements(walkRequirements.filter((_, i) => i !== idx));
+  };
+
+  const handleAddDiet = () => {
+    setEditDietText('');
+    setEditingDietIdx(-1);
+  };
+
+  const handleEditDiet = (idx: number) => {
+    setEditDietText(dietaryRestrictions[idx].text);
+    setEditingDietIdx(idx);
+  };
+
+  const handleSaveDiet = () => {
+    if (!editDietText.trim()) {
+      Taro.showToast({ title: '请填写饮食禁忌', icon: 'none' });
+      return;
+    }
+    if (editingDietIdx === -1) {
+      setDietaryRestrictions([...dietaryRestrictions, { id: `diet_${Date.now()}`, text: editDietText }]);
+    } else {
+      const newList = [...dietaryRestrictions];
+      newList[editingDietIdx] = { ...newList[editingDietIdx], text: editDietText };
+      setDietaryRestrictions(newList);
+    }
+    setEditingDietIdx(-2);
+  };
+
+  const handleRemoveDiet = (idx: number) => {
+    setDietaryRestrictions(dietaryRestrictions.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = () => {
     if (!selectedPet) {
       Taro.showToast({ title: '请选择宠物', icon: 'none' });
@@ -177,8 +248,8 @@ const BookingPage: React.FC = () => {
       { time: '18:00', food: '皇家狗粮', amount: '150g' }
     ]);
     setMedications([]);
-    setWalkRequirements('');
-    setDietaryRestrictions('');
+    setWalkRequirements([]);
+    setDietaryRestrictions([]);
     setNotes('');
     setPhotos([]);
   };
@@ -390,24 +461,84 @@ const BookingPage: React.FC = () => {
 
         <View className={styles.card}>
           <Text className={styles.sectionTitle}>散步要求</Text>
-          <Textarea
-            className={styles.textArea}
-            placeholder="请填写散步频次、时长、特殊要求等"
-            value={walkRequirements}
-            onInput={(e) => setWalkRequirements(e.detail.value)}
-            maxlength={200}
-          />
+          {walkRequirements.length > 0 ? (
+            walkRequirements.map((item, index) => (
+              editingWalkIdx === index ? (
+                <View key={item.id} className={styles.editCard}>
+                  <View className={styles.editRow}>
+                    <Text className={styles.editLabel}>内容</Text>
+                    <Input
+                      className={styles.editInput}
+                      value={editWalkText}
+                      onInput={(e) => setEditWalkText(e.detail.value)}
+                      placeholder="请输入散步要求"
+                    />
+                  </View>
+                  <View className={styles.editActions}>
+                    <Button className={styles.editBtnCancel} onClick={() => setEditingWalkIdx(-2)}>取消</Button>
+                    <Button className={styles.editBtnSave} onClick={handleSaveWalk}>保存</Button>
+                  </View>
+                </View>
+              ) : (
+                <View key={item.id} className={styles.medicationItem}>
+                  <View className={styles.medicationHeader}>
+                    <Text className={styles.medicationName}>{item.text}</Text>
+                    <View style={{ display: 'flex', gap: '16rpx' }}>
+                      <Text className={styles.actionText} onClick={() => handleEditWalk(index)}>编辑</Text>
+                      <Text className={styles.deleteText} onClick={() => handleRemoveWalk(index)}>删除</Text>
+                    </View>
+                  </View>
+                </View>
+              )
+            ))
+          ) : (
+            <Text style={{ color: '#9CA3AF', fontSize: '26rpx' }}>暂无散步要求</Text>
+          )}
+          <View className={styles.addButton} onClick={handleAddWalk}>
+            <Text className={styles.addButtonIcon}>+</Text>
+            <Text>添加散步要求</Text>
+          </View>
         </View>
 
         <View className={styles.card}>
           <Text className={styles.sectionTitle}>饮食禁忌</Text>
-          <Textarea
-            className={styles.textArea}
-            placeholder="请填写过敏食物、饮食禁忌等"
-            value={dietaryRestrictions}
-            onInput={(e) => setDietaryRestrictions(e.detail.value)}
-            maxlength={200}
-          />
+          {dietaryRestrictions.length > 0 ? (
+            dietaryRestrictions.map((item, index) => (
+              editingDietIdx === index ? (
+                <View key={item.id} className={styles.editCard}>
+                  <View className={styles.editRow}>
+                    <Text className={styles.editLabel}>内容</Text>
+                    <Input
+                      className={styles.editInput}
+                      value={editDietText}
+                      onInput={(e) => setEditDietText(e.detail.value)}
+                      placeholder="请输入饮食禁忌"
+                    />
+                  </View>
+                  <View className={styles.editActions}>
+                    <Button className={styles.editBtnCancel} onClick={() => setEditingDietIdx(-2)}>取消</Button>
+                    <Button className={styles.editBtnSave} onClick={handleSaveDiet}>保存</Button>
+                  </View>
+                </View>
+              ) : (
+                <View key={item.id} className={styles.medicationItem}>
+                  <View className={styles.medicationHeader}>
+                    <Text className={styles.medicationName}>{item.text}</Text>
+                    <View style={{ display: 'flex', gap: '16rpx' }}>
+                      <Text className={styles.actionText} onClick={() => handleEditDiet(index)}>编辑</Text>
+                      <Text className={styles.deleteText} onClick={() => handleRemoveDiet(index)}>删除</Text>
+                    </View>
+                  </View>
+                </View>
+              )
+            ))
+          ) : (
+            <Text style={{ color: '#9CA3AF', fontSize: '26rpx' }}>暂无饮食禁忌</Text>
+          )}
+          <View className={styles.addButton} onClick={handleAddDiet}>
+            <Text className={styles.addButtonIcon}>+</Text>
+            <Text>添加饮食禁忌</Text>
+          </View>
         </View>
 
         <View className={styles.card}>

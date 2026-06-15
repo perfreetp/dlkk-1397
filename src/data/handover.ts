@@ -16,9 +16,12 @@ export const handoverList: HandoverItem[] = [
     ],
     healthStatus: '良好，精神状态佳',
     moodStatus: '兴奋，对新环境好奇',
+    petStatusNote: '',
     ownerConfirmed: true,
     staffConfirmed: true,
-    confirmedAt: '2024-06-15 10:30'
+    ownerConfirmedAt: '2024-06-15 10:25',
+    staffConfirmedAt: '2024-06-15 10:30',
+    completedAt: '2024-06-15 10:30'
   }
 ];
 
