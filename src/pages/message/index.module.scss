@@ -1,0 +1,238 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding;
+  padding-top: 60rpx;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+  margin-top: -24rpx;
+}
+
+/* 快捷入口 */
+.quickActions {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.quickAction {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.quickActionIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  background-color: $color-primary-bg;
+}
+
+.quickActionText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.quickAction.danger .quickActionIcon {
+  background-color: $color-error-light;
+}
+
+.quickAction.info .quickActionIcon {
+  background-color: $color-info-light;
+}
+
+/* 消息分类标签 */
+.tabBar {
+  display: flex;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 8rpx;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  overflow-x: auto;
+}
+
+.tabItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  transition: all $transition-base;
+  position: relative;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.tabBadge {
+  position: absolute;
+  top: 4rpx;
+  right: 16rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  background-color: $color-error;
+  color: white;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 消息列表 */
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.messageItem {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  position: relative;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &.unread::before {
+    content: '';
+    position: absolute;
+    top: 24rpx;
+    left: 24rpx;
+    width: 16rpx;
+    height: 16rpx;
+    background-color: $color-error;
+    border-radius: 50%;
+  }
+}
+
+.messageIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+  background-color: $color-primary-bg;
+}
+
+.messageIcon.alert {
+  background-color: $color-error-light;
+}
+
+.messageIcon.system {
+  background-color: $color-info-light;
+}
+
+.messageIcon.daily {
+  background-color: $color-success-light;
+}
+
+.messageIcon.chat {
+  background-color: $color-warning-light;
+}
+
+.messageContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.messageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messageTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.messageTime {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.messagePreview {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  @include text-ellipsis-multi(2);
+  line-height: 1.5;
+}
+
+/* 空状态 */
+.emptyState {
+  text-align: center;
+  padding: 120rpx 0;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

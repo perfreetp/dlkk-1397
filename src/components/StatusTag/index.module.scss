@@ -1,0 +1,79 @@
+@use '@/styles/variables.scss' as *;
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+  white-space: nowrap;
+}
+
+.text {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  line-height: 1.4;
+}
+
+.pending {
+  background-color: $color-warning-light;
+  .text {
+    color: $color-warning;
+  }
+}
+
+.confirmed {
+  background-color: $color-info-light;
+  .text {
+    color: $color-info;
+  }
+}
+
+.inProgress {
+  background-color: $color-success-light;
+  .text {
+    color: $color-success;
+  }
+}
+
+.completed {
+  background-color: $color-primary-bg;
+  .text {
+    color: $color-primary;
+  }
+}
+
+.cancelled {
+  background-color: $color-text-disabled;
+  .text {
+    color: $color-text-tertiary;
+  }
+}
+
+.good {
+  background-color: $color-success-light;
+  .text {
+    color: $color-success;
+  }
+}
+
+.normal {
+  background-color: $color-warning-light;
+  .text {
+    color: $color-warning;
+  }
+}
+
+.bad {
+  background-color: $color-error-light;
+  .text {
+    color: $color-error;
+  }
+}
+
+.default {
+  background-color: $color-bg-hover;
+  .text {
+    color: $color-text-secondary;
+  }
+}

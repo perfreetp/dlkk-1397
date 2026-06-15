@@ -1,0 +1,361 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding;
+  padding-top: 60rpx;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+  margin-top: -24rpx;
+}
+
+/* 今日概览卡片 */
+.todayCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.todayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.todayDate {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.todayMood {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 6rpx 16rpx;
+  background-color: $color-success-light;
+  border-radius: $radius-button;
+}
+
+.todayMoodText {
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.todayMoodIcon {
+  font-size: $font-size-md;
+}
+
+/* 状态网格 */
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  padding: $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.statusIcon {
+  font-size: 36rpx;
+}
+
+.statusLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.statusValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+/* 时间线 */
+.timeline {
+  margin-top: $spacing-lg;
+}
+
+.timelineTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &::before {
+    content: '';
+    width: 8rpx;
+    height: 32rpx;
+    background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+    border-radius: $radius-xs;
+  }
+}
+
+.dayCard {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.dayDate {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.dayStatus {
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.daySection {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.daySectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.daySectionIcon {
+  font-size: $font-size-md;
+}
+
+.daySectionContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+/* 饮食记录 */
+.mealList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.mealItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.mealTime {
+  flex-shrink: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-primary;
+  width: 100rpx;
+}
+
+.mealInfo {
+  flex: 1;
+}
+
+.mealFood {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  margin-bottom: 2rpx;
+}
+
+.mealAmount {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+}
+
+.mealStatus {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  background-color: $color-success-light;
+  color: $color-success;
+}
+
+.mealStatus.partial {
+  background-color: $color-warning-light;
+  color: $color-warning;
+}
+
+/* 照片墙 */
+.photoWall {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8rpx;
+}
+
+.photoItem {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: $radius-sm;
+  overflow: hidden;
+}
+
+.photoImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoMore {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+/* 店员备注 */
+.staffNote {
+  padding: $spacing-md;
+  background-color: $color-primary-bg;
+  border-radius: $radius-md;
+  border-left: 6rpx solid $color-primary;
+}
+
+.staffNoteText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 1.6;
+}
+
+.staffNoteFooter {
+  margin-top: $spacing-sm;
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  text-align: right;
+}
+
+/* 散步记录 */
+.walkInfo {
+  display: flex;
+  gap: $spacing-lg;
+  padding: $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.walkInfoItem {
+  flex: 1;
+  text-align: center;
+}
+
+.walkInfoValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin-bottom: 4rpx;
+}
+
+.walkInfoLabel {
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+}
+
+/* 切换按钮 */
+.petSelector {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+}
+
+.petTab {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-card;
+  border-radius: $radius-button;
+  box-shadow: $shadow-card;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+
+  &.active {
+    border-color: $color-primary;
+    background-color: $color-primary-bg;
+  }
+}
+
+.petTabAvatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: $radius-round;
+  object-fit: cover;
+}
+
+.petTabName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}

@@ -1,0 +1,318 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding;
+  padding-top: 60rpx;
+}
+
+.headerTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.headerSubtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.content {
+  padding: $spacing-lg $page-padding;
+  margin-top: -24rpx;
+}
+
+.tabBar {
+  display: flex;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 8rpx;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.tabItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.card {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.petInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.petAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  object-fit: cover;
+}
+
+.petName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.petMeta {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  margin-top: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &::before {
+    content: '';
+    width: 6rpx;
+    height: 28rpx;
+    background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+    border-radius: $radius-xs;
+  }
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all $transition-base;
+
+  &.checked {
+    background-color: $color-success;
+    border-color: $color-success;
+
+    &::after {
+      content: '✓';
+      color: white;
+      font-size: 24rpx;
+      font-weight: bold;
+    }
+  }
+}
+
+.checkLabel {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.goodsCategory {
+  margin-bottom: $spacing-md;
+}
+
+.categoryTitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.goodsList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.goodsItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+}
+
+.goodsCheckbox {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.checked {
+    background-color: $color-primary;
+    border-color: $color-primary;
+
+    &::after {
+      content: '✓';
+      color: white;
+      font-size: 22rpx;
+      font-weight: bold;
+    }
+  }
+}
+
+.goodsName {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.goodsQty {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background-color: $color-success-light;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.statusText {
+  font-size: $font-size-md;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.statusTime {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.confirmSection {
+  margin-top: $spacing-lg;
+  display: flex;
+  gap: $spacing-md;
+}
+
+.confirmItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.confirmLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.confirmStatus {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-success;
+}
+
+.confirmStatus.pending {
+  color: $color-text-tertiary;
+}
+
+.signButton {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-md;
+  text-align: center;
+  color: white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80rpx 0;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}

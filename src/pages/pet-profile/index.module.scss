@@ -1,0 +1,185 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background-color: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+/* 宠物头像区域 */
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: 60rpx $page-padding $spacing-xl;
+  text-align: center;
+}
+
+.petAvatar {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: $radius-round;
+  border: 6rpx solid rgba(255, 255, 255, 0.5);
+  object-fit: cover;
+  margin-bottom: $spacing-md;
+}
+
+.petName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: 8rpx;
+}
+
+.petBreed {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+  margin-top: -24rpx;
+}
+
+.card {
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.cardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  &::before {
+    content: '';
+    width: 8rpx;
+    height: 32rpx;
+    background: linear-gradient(180deg, $color-primary 0%, $color-primary-light 100%);
+    border-radius: $radius-xs;
+  }
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.infoValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+/* 健康档案 */
+.healthList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.healthItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background-color: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.healthInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.healthIcon {
+  font-size: 36rpx;
+}
+
+.healthText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.healthStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.healthStatus.ok {
+  color: $color-success;
+}
+
+.healthStatus.warning {
+  color: $color-warning;
+}
+
+/* 疫苗记录 */
+.vaccineList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.vaccineItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.vaccineName {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.vaccineDate {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.vaccineTag {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  background-color: $color-success-light;
+  color: $color-success;
+}
+
+/* 性格特点标签 */
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.tag {
+  padding: 8rpx 20rpx;
+  background-color: $color-primary-bg;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  border-radius: $radius-button;
+}
