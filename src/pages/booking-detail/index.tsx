@@ -13,7 +13,7 @@ import useAppStore from '@/store';
 import StatusTag from '@/components/StatusTag';
 
 const BookingDetailPage: React.FC = () => {
-  const { bookings, updateBooking } = useAppStore();
+  const { bookings, updateBooking, handovers, feeItems, setLastSelectedBookingId } = useAppStore();
   const id = Taro.getCurrentInstance().router?.params?.id;
   const booking = bookings.find(b => b.id === id) || bookings[0];
 
@@ -48,6 +48,30 @@ const BookingDetailPage: React.FC = () => {
 
   const handleViewDynamics = () => {
     Taro.switchTab({ url: '/pages/dynamics/index' });
+  };
+
+  const checkInHandover = handovers.find(h => h.bookingId === booking.id && h.type === 'check_in');
+  const checkOutHandover = handovers.find(h => h.bookingId === booking.id && h.type === 'check_out');
+
+  const isCheckInCompleted = !!(checkInHandover?.ownerConfirmed && checkInHandover?.staffConfirmed);
+  const isCheckOutCompleted = !!(checkOutHandover?.ownerConfirmed && checkOutHandover?.staffConfirmed);
+
+  const returnGoodsTotalCount = checkOutHandover?.itemsList?.length || 0;
+  const returnGoodsCheckedCount = (checkOutHandover?.itemsList || []).filter(g => g.checked).length;
+  const returnGoodsMissingCount = returnGoodsTotalCount - returnGoodsCheckedCount;
+
+  const totalFee = feeItems.reduce((s, f) => s + f.price * f.quantity, 0);
+  const feeSettled = totalFee > 0;
+
+  const hasHandoverRecord = !!(checkInHandover || checkOutHandover);
+
+  const handleViewHandover = () => {
+    if (!hasHandoverRecord) {
+      Taro.showToast({ title: '暂无交接记录', icon: 'none' });
+      return;
+    }
+    setLastSelectedBookingId(booking.id);
+    Taro.switchTab({ url: '/pages/handover/index' });
   };
 
   const statusText: Record<string, string> = {
@@ -169,6 +193,76 @@ const BookingDetailPage: React.FC = () => {
             <Text className={styles.infoLabel}>下单时间</Text>
             <Text className={styles.infoValue}>{booking.createdAt}</Text>
           </View>
+        </View>
+
+        {/* 交接记录入口 */}
+        <View className={styles.handoverEntry} onClick={handleViewHandover}>
+          <View className={styles.handoverEntryHeader}>
+            <Text className={styles.handoverEntryTitle}>交接记录</Text>
+            <Text className={styles.handoverEntryArrow}>查看详情 →</Text>
+          </View>
+
+          {isCheckOutCompleted && checkOutHandover ? (
+            <View className={styles.handoverSummary}>
+              <View className={styles.handoverSummaryGrid}>
+                <View className={styles.handoverSummaryItem}>
+                  <Text className={styles.handoverSummaryLabel}>寄养天数</Text>
+                  <Text className={styles.handoverSummaryValue}>{booking.days} 天</Text>
+                </View>
+                <View className={styles.handoverSummaryItem}>
+                  <Text className={styles.handoverSummaryLabel}>交接完成</Text>
+                  <Text className={styles.handoverSummaryValue}>
+                    {checkOutHandover.completedAt ? checkOutHandover.completedAt.slice(5, 16) : '—'}
+                  </Text>
+                </View>
+                <View className={styles.handoverSummaryItem}>
+                  <Text className={styles.handoverSummaryLabel}>物品归还</Text>
+                  <Text className={classnames(
+                    styles.handoverSummaryValue,
+                    returnGoodsMissingCount > 0 && styles.summaryWarn
+                  )}>
+                    {returnGoodsMissingCount > 0 ? `${returnGoodsMissingCount} 件未归还` : '全部归还'}
+                  </Text>
+                </View>
+                <View className={styles.handoverSummaryItem}>
+                  <Text className={styles.handoverSummaryLabel}>费用状态</Text>
+                  <Text className={classnames(
+                    styles.handoverSummaryValue,
+                    feeSettled && styles.summaryOk
+                  )}>
+                    {feeSettled ? '已结清' : '待结算'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View className={styles.handoverStatus}>
+              <View className={styles.handoverStatusItem}>
+                <View className={classnames(
+                  styles.handoverStatusDot,
+                  isCheckInCompleted && styles.statusDotDone
+                )} />
+                <Text className={styles.handoverStatusText}>
+                  到店交接{isCheckInCompleted ? '已完成' : '待办理'}
+                </Text>
+                {checkInHandover?.completedAt && (
+                  <Text className={styles.handoverStatusTime}>{checkInHandover.completedAt}</Text>
+                )}
+              </View>
+              <View className={styles.handoverStatusItem}>
+                <View className={classnames(
+                  styles.handoverStatusDot,
+                  isCheckOutCompleted && styles.statusDotDone
+                )} />
+                <Text className={styles.handoverStatusText}>
+                  离店交接{isCheckOutCompleted ? '已完成' : '待办理'}
+                </Text>
+                {checkOutHandover?.completedAt && (
+                  <Text className={styles.handoverStatusTime}>{checkOutHandover.completedAt}</Text>
+                )}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* 喂食计划 */}

@@ -4,8 +4,7 @@ import {
   Text,
   Image,
   ScrollView,
-  Textarea,
-  Picker
+  Textarea
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import styles from './index.module.scss';
@@ -26,7 +25,9 @@ const HandoverPage: React.FC = () => {
     updateBooking,
     feeItems,
     updateHandover,
-    addHandover
+    addHandover,
+    lastSelectedBookingId,
+    setLastSelectedBookingId
   } = useAppStore();
 
   const inProgressBooking = useMemo(
@@ -34,24 +35,46 @@ const HandoverPage: React.FC = () => {
     [bookings]
   );
 
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-    inProgressBooking?.id || bookings[0]?.id || null
-  );
-  const [activeTab, setActiveTab] = useState<'check_in' | 'check_out'>('check_in');
+  const getInitialBookingId = (): string | null => {
+    if (lastSelectedBookingId && bookings.some(b => b.id === lastSelectedBookingId)) {
+      return lastSelectedBookingId;
+    }
+    if (inProgressBooking?.id) return inProgressBooking.id;
+    if (bookings.length > 0) return bookings[0].id;
+    return null;
+  };
+
+  const getInitialTab = (bookingId: string | null): 'check_in' | 'check_out' => {
+    if (!bookingId) return 'check_in';
+    const b = bookings.find(bk => bk.id === bookingId);
+    if (!b) return 'check_in';
+    if (b.status === 'completed') return 'check_out';
+    if (b.status === 'in_progress') return 'check_in';
+    const checkoutHo = handovers.find(h => h.bookingId === bookingId && h.type === 'check_out');
+    if (checkoutHo?.ownerConfirmed || checkoutHo?.staffConfirmed) return 'check_out';
+    return 'check_in';
+  };
+
+  const initialBookingId = getInitialBookingId();
+  const initialTab = getInitialTab(initialBookingId);
+
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(initialBookingId);
+  const [activeTab, setActiveTab] = useState<'check_in' | 'check_out'>(initialTab);
   const [petStatusDraft, setPetStatusDraft] = useState('');
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    if (!selectedBookingId && bookings.length > 0) {
-      setSelectedBookingId(bookings[0].id);
+    if (selectedBookingId && selectedBookingId !== lastSelectedBookingId) {
+      setLastSelectedBookingId(selectedBookingId);
     }
-  }, [bookings, selectedBookingId]);
+  }, [selectedBookingId, lastSelectedBookingId, setLastSelectedBookingId]);
 
   useEffect(() => {
-    if (inProgressBooking?.id && !selectedBookingId) {
-      setSelectedBookingId(inProgressBooking.id);
+    if (!selectedBookingId && bookings.length > 0) {
+      const defaultId = inProgressBooking?.id || bookings[0]?.id || null;
+      setSelectedBookingId(defaultId);
     }
-  }, [inProgressBooking, selectedBookingId]);
+  }, [bookings, selectedBookingId, inProgressBooking]);
 
   const currentBooking: Booking | undefined = useMemo(
     () => bookings.find(b => b.id === selectedBookingId),
@@ -125,8 +148,16 @@ const HandoverPage: React.FC = () => {
 
   const returnGoodsCheckedCount = (checkOutHandover?.itemsList || []).filter(g => g.checked).length;
   const returnGoodsTotalCount = (checkOutHandover?.itemsList || []).length;
+  const returnGoodsMissingCount = returnGoodsTotalCount - returnGoodsCheckedCount;
 
   const allChecklistChecked = checklist.every(c => c.checked);
+  const allGoodsReturned = returnGoodsCheckedCount === returnGoodsTotalCount && returnGoodsTotalCount > 0;
+  const hasPetStatusNote = !!(checkOutHandover?.petStatusNote && checkOutHandover.petStatusNote.trim().length > 0);
+
+  const canConfirmCheckout = useMemo(() => {
+    if (activeTab !== 'check_out') return allChecklistChecked;
+    return allChecklistChecked && allGoodsReturned && hasPetStatusNote;
+  }, [activeTab, allChecklistChecked, allGoodsReturned, hasPetStatusNote]);
 
   const roomFee = feeItems.filter(f => f.type === 'room').reduce((s, f) => s + f.price * f.quantity, 0);
   const serviceFee = feeItems.filter(f => f.type === 'service' || f.type === 'extra').reduce((s, f) => s + f.price * f.quantity, 0);
@@ -134,6 +165,8 @@ const HandoverPage: React.FC = () => {
 
   const isBothConfirmed = !!(currentHandover?.ownerConfirmed && currentHandover?.staffConfirmed);
   const isCheckoutCompleted = !!(checkOutHandover?.ownerConfirmed && checkOutHandover?.staffConfirmed);
+
+  const feeSettled = totalFee > 0;
 
   const handleTabChange = (tab: 'check_in' | 'check_out') => {
     setActiveTab(tab);
@@ -143,12 +176,21 @@ const HandoverPage: React.FC = () => {
     setSelectedBookingId(id);
     setShowHistory(false);
     const b = bookings.find(bk => bk.id === id);
-    if (b && b.status === 'in_progress') {
+    if (!b) {
       setActiveTab('check_in');
-    } else if (isCheckoutCompleted) {
+      return;
+    }
+    if (b.status === 'completed') {
       setActiveTab('check_out');
-    } else {
+    } else if (b.status === 'in_progress') {
       setActiveTab('check_in');
+    } else {
+      const checkoutHo = handovers.find(h => h.bookingId === id && h.type === 'check_out');
+      if (checkoutHo?.ownerConfirmed || checkoutHo?.staffConfirmed) {
+        setActiveTab('check_out');
+      } else {
+        setActiveTab('check_in');
+      }
     }
   };
 
@@ -177,10 +219,15 @@ const HandoverPage: React.FC = () => {
   const handleConfirm = (role: 'owner' | 'staff') => {
     if (!currentHandover || !allChecklistChecked) return;
 
-    const uncheckedItems = checklist.filter(c => !c.checked);
-    if (uncheckedItems.length > 0) {
-      Taro.showToast({ title: '请先完成所有核对项', icon: 'none' });
-      return;
+    if (activeTab === 'check_out') {
+      if (!allGoodsReturned) {
+        Taro.showToast({ title: '请先核对完所有归还物品', icon: 'none' });
+        return;
+      }
+      if (!hasPetStatusNote) {
+        Taro.showToast({ title: '请先填写宠物状态记录', icon: 'none' });
+        return;
+      }
     }
 
     const checklistSummary = checklist.map(c => `${c.checked ? '✓' : '✗'} ${c.label}`).join('\n');
@@ -294,6 +341,46 @@ const HandoverPage: React.FC = () => {
             </View>
           )}
         </View>
+
+        {isCheckoutCompleted && (
+          <View className={styles.summaryCard}>
+            <Text className={styles.summaryTitle}>交接摘要</Text>
+            <View className={styles.summaryGrid}>
+              <View className={styles.summaryItem}>
+                <Text className={styles.summaryLabel}>寄养天数</Text>
+                <Text className={styles.summaryValue}>{currentBooking.days} 天</Text>
+              </View>
+              <View className={styles.summaryItem}>
+                <Text className={styles.summaryLabel}>交接完成</Text>
+                <Text className={styles.summaryValue}>
+                  {checkOutHandover?.completedAt ? checkOutHandover.completedAt.slice(5, 16) : '—'}
+                </Text>
+              </View>
+              <View className={styles.summaryItem}>
+                <Text className={styles.summaryLabel}>物品归还</Text>
+                <Text className={classnames(
+                  styles.summaryValue,
+                  returnGoodsMissingCount > 0 && styles.summaryWarn
+                )}>
+                  {returnGoodsMissingCount > 0 ? `${returnGoodsMissingCount} 件未归还` : '全部归还'}
+                </Text>
+              </View>
+              <View className={styles.summaryItem}>
+                <Text className={styles.summaryLabel}>费用状态</Text>
+                <Text className={classnames(
+                  styles.summaryValue,
+                  feeSettled && styles.summaryOk
+                )}>
+                  {feeSettled ? '已结清' : '待结算'}
+                </Text>
+              </View>
+            </View>
+            <View className={styles.summaryAmount}>
+              <Text className={styles.summaryAmountLabel}>总费用</Text>
+              <Text className={styles.summaryAmountValue}>¥{totalFee}</Text>
+            </View>
+          </View>
+        )}
 
         <View className={styles.tabBar}>
           <View
@@ -410,7 +497,7 @@ const HandoverPage: React.FC = () => {
           </View>
         )}
 
-        {!isBothConfirmed && (
+        {activeTab === 'check_in' && !isBothConfirmed && (
           <View className={styles.card}>
             <Text className={styles.sectionTitle}>
               物品清单 ({goodsCheckedCount}/{goodsTotalCount})
@@ -473,23 +560,11 @@ const HandoverPage: React.FC = () => {
           </View>
         )}
 
-        {activeTab === 'check_in' && currentHandover && !isBothConfirmed && (
+        {activeTab === 'check_in' && currentHandover && (
           <View className={styles.card}>
-            <Text className={styles.sectionTitle}>健康状态</Text>
-            <View className={styles.infoRow}>
-              <Text className={styles.infoLabel}>体表检查</Text>
-              <Text className={styles.infoValue}>{currentHandover.healthStatus}</Text>
-            </View>
-            <View className={styles.infoRow}>
-              <Text className={styles.infoLabel}>精神状态</Text>
-              <Text className={styles.infoValue}>{currentHandover.moodStatus}</Text>
-            </View>
-          </View>
-        )}
-
-        {activeTab === 'check_in' && currentHandover && isBothConfirmed && (
-          <View className={styles.card}>
-            <Text className={styles.sectionTitle}>到店健康状态</Text>
+            <Text className={styles.sectionTitle}>
+              {isBothConfirmed ? '到店健康状态' : '健康状态'}
+            </Text>
             <View className={styles.infoRow}>
               <Text className={styles.infoLabel}>体表检查</Text>
               <Text className={styles.infoValue}>{currentHandover.healthStatus}</Text>
@@ -507,7 +582,10 @@ const HandoverPage: React.FC = () => {
               <View className={styles.card}>
                 <Text className={styles.sectionTitle}>归还物品核对</Text>
                 <View className={styles.returnProgressText}>
-                  <Text>已归还 {returnGoodsCheckedCount}/{returnGoodsTotalCount} 件</Text>
+                  <Text>
+                    已归还 {returnGoodsCheckedCount}/{returnGoodsTotalCount} 件
+                    {returnGoodsMissingCount > 0 && `（${returnGoodsMissingCount}件待核对）`}
+                  </Text>
                 </View>
                 <View className={styles.returnProgress}>
                   <View
@@ -538,7 +616,10 @@ const HandoverPage: React.FC = () => {
 
             {!isCheckoutCompleted && (
               <View className={styles.card}>
-                <Text className={styles.sectionTitle}>宠物状态记录</Text>
+                <Text className={styles.sectionTitle}>
+                  宠物状态记录
+                  {!hasPetStatusNote && <Text style={{ color: '#EF4444', fontSize: '24rpx', marginLeft: '8rpx' }}>（必填）</Text>}
+                </Text>
                 <Textarea
                   className={styles.petStatusInput}
                   placeholder="请记录宠物当前状态，如精神状态、毛发、是否已洗澡等"
@@ -593,7 +674,7 @@ const HandoverPage: React.FC = () => {
               <View
                 className={classnames(
                   styles.confirmBtn,
-                  (!allChecklistChecked || currentHandover?.ownerConfirmed) && styles.confirmBtnDisabled,
+                  (!canConfirmCheckout || currentHandover?.ownerConfirmed) && styles.confirmBtnDisabled,
                   currentHandover?.ownerConfirmed && styles.confirmBtnDone
                 )}
                 onClick={() => handleConfirm('owner')}
@@ -608,7 +689,7 @@ const HandoverPage: React.FC = () => {
               <View
                 className={classnames(
                   styles.confirmBtn,
-                  (!allChecklistChecked || currentHandover?.staffConfirmed) && styles.confirmBtnDisabled,
+                  (!canConfirmCheckout || currentHandover?.staffConfirmed) && styles.confirmBtnDisabled,
                   currentHandover?.staffConfirmed && styles.confirmBtnDone
                 )}
                 onClick={() => handleConfirm('staff')}
@@ -623,6 +704,12 @@ const HandoverPage: React.FC = () => {
             </View>
             {!allChecklistChecked && (
               <Text className={styles.confirmTip}>请先完成所有核对项后再确认</Text>
+            )}
+            {activeTab === 'check_out' && allChecklistChecked && !allGoodsReturned && (
+              <Text className={styles.confirmTip}>请先核对完所有归还物品</Text>
+            )}
+            {activeTab === 'check_out' && allChecklistChecked && allGoodsReturned && !hasPetStatusNote && (
+              <Text className={styles.confirmTip}>请先填写宠物状态记录</Text>
             )}
           </View>
         )}

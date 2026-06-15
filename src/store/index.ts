@@ -44,6 +44,7 @@ interface AppState {
   feeItems: FeeItem[];
   handovers: HandoverItem[];
   selectedExtraServices: string[];
+  lastSelectedBookingId: string | null;
 
   addBooking: (booking: Booking) => void;
   updateBooking: (id: string, data: Partial<Booking>) => void;
@@ -64,6 +65,8 @@ interface AppState {
   toggleChecklistItem: (tab: 'check_in' | 'check_out', itemId: string) => void;
   confirmHandover: (handoverId: string, role: 'owner' | 'staff') => void;
 
+  setLastSelectedBookingId: (id: string | null) => void;
+
   checkInChecklist: typeof checkInChecklist;
   checkOutChecklist: typeof checkOutChecklist;
 }
@@ -76,6 +79,7 @@ const useAppStore = create<AppState>()(
       feeItems: initFeeItems,
       handovers: initHandovers.map(fixHandover),
       selectedExtraServices: ['es1'],
+      lastSelectedBookingId: null,
       checkInChecklist: checkInChecklist.map(c => ({ ...c })),
       checkOutChecklist: checkOutChecklist.map(c => ({ ...c })),
 
@@ -218,7 +222,9 @@ const useAppStore = create<AppState>()(
             };
           })
         };
-      })
+      }),
+
+      setLastSelectedBookingId: (id) => set({ lastSelectedBookingId: id })
     }),
     {
       name: 'pet-board-store',
@@ -230,6 +236,7 @@ const useAppStore = create<AppState>()(
         selectedExtraServices: state.selectedExtraServices,
         checkInChecklist: state.checkInChecklist,
         checkOutChecklist: state.checkOutChecklist,
+        lastSelectedBookingId: state.lastSelectedBookingId,
       })
     }
   )
